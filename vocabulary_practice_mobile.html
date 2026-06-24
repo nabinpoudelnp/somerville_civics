@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vocabulary Practice | Somerville Civics</title>
+  
+<style>
+  * { box-sizing: border-box; }
+
+  :root {
+    --civic-blue: #163f8c;
+    --civic-blue-2: #2563eb;
+    --civic-sky: #eaf5ff;
+    --civic-card: #ffffff;
+    --civic-border: #cfe2ff;
+    --civic-text: #10203f;
+    --civic-muted: #5b6b86;
+    --good: #0f7a5a;
+    --bad: #b42318;
+    --warn: #8a4b08;
+  }
+
+  body {
+    margin: 0;
+    background: linear-gradient(180deg, #f2f8ff 0%, #ffffff 42%, #f7fbff 100%);
+  }
+
+  .wrap {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: clamp(14px, 4vw, 28px);
+    color: var(--civic-text);
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+
+  .activity-header {
+    margin-bottom: 18px;
+    padding: clamp(18px, 5vw, 34px);
+    border: 1px solid var(--civic-border);
+    border-radius: 24px;
+    background:
+      radial-gradient(circle at top right, rgba(37, 99, 235, 0.13), transparent 34%),
+      linear-gradient(135deg, #ffffff 0%, #eef7ff 100%);
+    box-shadow: 0 12px 30px rgba(21, 64, 140, 0.10);
+  }
+
+  .activity-title {
+    font-size: clamp(30px, 8vw, 54px);
+    line-height: 1.04;
+    font-weight: 850;
+    letter-spacing: -0.04em;
+    color: #0b2c6f;
+    margin-bottom: 10px;
+  }
+
+  .activity-title::after {
+    content: "Your city. Your voice.";
+    display: inline-block;
+    margin-left: 10px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    background: #dff4e8;
+    color: #12633f;
+    font-size: clamp(12px, 3.2vw, 15px);
+    font-weight: 750;
+    letter-spacing: 0;
+    vertical-align: middle;
+  }
+
+  .activity-sub {
+    max-width: 720px;
+    font-size: clamp(17px, 4.5vw, 22px);
+    color: var(--civic-muted);
+    line-height: 1.45;
+  }
+
+  .bank-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 13px;
+    border-radius: 999px;
+    background: var(--civic-blue);
+    color: #fff;
+    font-size: clamp(13px, 3.5vw, 15px);
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin: 2px 0 10px;
+  }
+
+  .bank-label::before { content: "📚"; }
+
+  .word-bank {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+    gap: 11px;
+    padding: clamp(14px, 4vw, 22px);
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid var(--civic-border);
+    border-radius: 22px;
+    margin-bottom: 18px;
+    box-shadow: 0 10px 26px rgba(21, 64, 140, 0.08);
+  }
+
+  .word-chip {
+    min-height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: clamp(16px, 4.2vw, 19px);
+    line-height: 1.15;
+    font-weight: 800;
+    padding: 12px 14px;
+    border-radius: 16px;
+    border: 2px solid #bcd6ff;
+    background: linear-gradient(180deg, #ffffff, #f4f9ff);
+    color: #0b2c6f;
+    cursor: pointer;
+    transition: transform 0.12s, box-shadow 0.12s, border-color 0.12s;
+    user-select: none;
+    box-shadow: 0 4px 12px rgba(21, 64, 140, 0.08);
+  }
+
+  .word-chip:nth-child(3n+1) { border-color: #bda7ff; background: #fbf8ff; }
+  .word-chip:nth-child(3n+2) { border-color: #a9dfbf; background: #f6fff8; }
+  .word-chip:nth-child(3n) { border-color: #ffd1a6; background: #fff9f2; }
+
+  .word-chip:hover,
+  .word-chip:focus {
+    transform: translateY(-1px);
+    border-color: var(--civic-blue-2);
+    box-shadow: 0 8px 18px rgba(37, 99, 235, 0.16);
+  }
+
+  .word-chip.selected {
+    background: var(--civic-blue-2);
+    color: white;
+    border-color: var(--civic-blue-2);
+    box-shadow: 0 8px 18px rgba(37, 99, 235, 0.25);
+  }
+
+  .word-chip.used { opacity: 0.38; pointer-events: none; text-decoration: line-through; }
+  .word-chip.correct-chip { background: #e1f5ee; color: var(--good); border-color: var(--good); pointer-events: none; }
+  .word-chip.wrong-chip { background: #fdecea; color: #9b2020; border-color: #9b2020; }
+
+  .sentences {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    border: 1px solid var(--civic-border);
+    border-radius: 22px;
+    overflow: hidden;
+    background: var(--civic-card);
+    box-shadow: 0 10px 26px rgba(21, 64, 140, 0.08);
+  }
+
+  .sentences::before {
+    content: "✏️ Fill in the blanks";
+    display: block;
+    padding: 16px 18px;
+    background: #f5faff;
+    border-bottom: 1px solid var(--civic-border);
+    font-size: clamp(18px, 4.8vw, 24px);
+    font-weight: 850;
+    color: #0b2c6f;
+  }
+
+  .sentence-row {
+    display: grid;
+    grid-template-columns: 42px 1fr;
+    gap: 12px;
+    align-items: start;
+    padding: clamp(15px, 4vw, 22px) clamp(14px, 4vw, 22px);
+    border-bottom: 1px solid #e0ebfb;
+    font-size: clamp(18px, 4.7vw, 21px);
+    color: var(--civic-text);
+    line-height: 1.58;
+  }
+
+  .sentence-row:last-child { border-bottom: none; }
+  .sentence-row.correct-row { background: #f0faf5; }
+  .sentence-row.wrong-row { background: #fff6f5; }
+
+  .sent-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: #eaf3ff;
+    border: 1px solid #cce2ff;
+    color: #0b2c6f;
+    font-size: 15px;
+    font-weight: 850;
+    margin-top: 2px;
+  }
+
+  .blank {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: min(220px, 72vw);
+    min-height: 42px;
+    margin: 3px 3px;
+    border: 2px dashed #8bbcff;
+    border-radius: 12px;
+    padding: 4px 10px;
+    cursor: pointer;
+    vertical-align: middle;
+    font-weight: 800;
+    color: #185fa5;
+    font-size: clamp(16px, 4.3vw, 19px);
+    transition: all 0.15s;
+    text-align: center;
+    background: #f8fbff;
+  }
+
+  .blank:hover,
+  .blank:focus { border-color: var(--civic-blue-2); background: #edf6ff; }
+  .blank.filled { border-style: solid; border-color: var(--civic-blue-2); background: #eef6ff; }
+  .blank.correct { border-color: var(--good); color: var(--good); background: #e8f7f1; }
+  .blank.wrong { border-color: var(--bad); color: var(--bad); background: #fff0ee; }
+  .blank.empty-blank { color: #6b7da0; font-weight: 650; font-style: normal; }
+
+  .result-icon { margin-left: 6px; font-size: 20px; }
+
+  .btn-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 18px;
+  }
+
+  .btn {
+    min-height: 52px;
+    font-size: clamp(16px, 4.2vw, 18px);
+    font-weight: 850;
+    padding: 12px 18px;
+    border-radius: 16px;
+    border: 1px solid #bdd6ff;
+    cursor: pointer;
+    transition: all 0.15s;
+    box-shadow: 0 5px 14px rgba(21, 64, 140, 0.08);
+  }
+
+  .btn-primary { background: var(--civic-blue-2); color: white; border-color: var(--civic-blue-2); }
+  .btn-primary:hover { background: #1d4ed8; }
+  .btn-secondary { background: white; color: #0b2c6f; }
+  .btn-secondary:hover { background: #f4f9ff; }
+  .btn:disabled { opacity: 0.4; cursor: default; }
+
+  .score-bar {
+    border-radius: 18px;
+    padding: 15px 18px;
+    margin-top: 14px;
+    font-size: clamp(17px, 4.4vw, 20px);
+    line-height: 1.35;
+    font-weight: 800;
+    display: none;
+    box-shadow: 0 6px 18px rgba(21, 64, 140, 0.08);
+  }
+
+  .score-bar.perfect { background: #e1f5ee; color: var(--good); }
+  .score-bar.good { background: #e6f1fb; color: #185fa5; }
+  .score-bar.keep-going { background: #faeeda; color: var(--warn); }
+
+  .hint-text { font-size: 14px; color: var(--civic-muted); margin-top: 4px; display: none; font-style: italic; padding-left: 38px; }
+  .sentence-row.wrong-row + .hint-text { display: block; }
+
+  @media (max-width: 620px) {
+    .wrap { padding: 12px; }
+    .activity-header { border-radius: 20px; }
+    .activity-title::after { display: block; width: fit-content; margin: 10px 0 0; }
+    .word-bank { grid-template-columns: 1fr 1fr; gap: 9px; }
+    .word-chip { min-height: 54px; padding: 10px 8px; }
+    .sentence-row { grid-template-columns: 36px 1fr; gap: 10px; }
+    .sent-num { width: 30px; height: 30px; font-size: 14px; }
+    .blank { min-width: 150px; max-width: 100%; }
+    .btn-row { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 380px) {
+    .word-bank { grid-template-columns: 1fr; }
+    .sentence-row { font-size: 17px; }
+    .blank { min-width: 132px; }
+  }
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+
+  <div class="activity-header">
+    <div class="activity-title">📝 Vocabulary fill-in — Somerville City Government</div>
+    <div class="activity-sub">Click a word from the bank, then click a blank to fill it in. Each word is used once.</div>
+  </div>
+
+  <div class="bank-label">Word bank</div>
+  <div class="word-bank" id="word-bank">
+    <div class="word-chip" data-word="quorum" onclick="selectWord(this)">quorum</div>
+    <div class="word-chip" data-word="petition" onclick="selectWord(this)">petition</div>
+    <div class="word-chip" data-word="city council" onclick="selectWord(this)">city council</div>
+    <div class="word-chip" data-word="zoning" onclick="selectWord(this)">zoning</div>
+    <div class="word-chip" data-word="budget appropriation" onclick="selectWord(this)">budget appropriation</div>
+    <div class="word-chip" data-word="municipality" onclick="selectWord(this)">municipality</div>
+    <div class="word-chip" data-word="public comment" onclick="selectWord(this)">public comment</div>
+    <div class="word-chip" data-word="ward" onclick="selectWord(this)">ward</div>
+    <div class="word-chip" data-word="ordinance" onclick="selectWord(this)">ordinance</div>
+    <div class="word-chip" data-word="constituent" onclick="selectWord(this)">constituent</div>
+  </div>
+
+  <div class="sentences" id="sentences">
+
+    <div class="sentence-row" id="row-1">
+      <span class="sent-num">1</span>
+      <span class="sent-text">
+        Somerville is a <span class="blank empty-blank" data-answer="municipality" onclick="fillBlank(this)">click to fill</span> of about 82,000 people with its own elected mayor, city council, and local laws — separate from the state government in Boston.
+      </span>
+    </div>
+
+    <div class="sentence-row" id="row-2">
+      <span class="sent-num">2</span>
+      <span class="sent-text">
+        The <span class="blank empty-blank" data-answer="city council" onclick="fillBlank(this)">click to fill</span> meets on the second and fourth Thursday of every month at City Hall on Highland Avenue, and all meetings are open to the public.
+      </span>
+    </div>
+
+    <div class="sentence-row" id="row-3">
+      <span class="sent-num">3</span>
+      <span class="sent-text">
+        Even if you are not a U.S. citizen, you are still a <span class="blank empty-blank" data-answer="constituent" onclick="fillBlank(this)">click to fill</span> of your ward councilor — they are elected to represent everyone who lives in their district, regardless of immigration status.
+      </span>
+    </div>
+
+    <div class="sentence-row" id="row-4">
+      <span class="sent-num">4</span>
+      <span class="sent-text">
+        The council voted to pass a new <span class="blank empty-blank" data-answer="ordinance" onclick="fillBlank(this)">click to fill</span> requiring landlords to give a legal reason — such as non-payment of rent — before evicting a tenant from their home.
+      </span>
+    </div>
+
+    <div class="sentence-row" id="row-5">
+      <span class="sent-num">5</span>
+      <span class="sent-text">
+        Because of <span class="blank empty-blank" data-answer="zoning" onclick="fillBlank(this)">click to fill</span> rules in East Somerville, a developer cannot build a 10-story tower in a neighborhood designated for two- and three-family homes without first getting a variance.
+      </span>
+    </div>
+
+    <div class="sentence-row" id="row-6">
+      <span class="sent-num">6</span>
+      <span class="sent-text">
+        During the <span class="blank empty-blank" data-answer="public comment" onclick="fillBlank(this)">click to fill</span> period at last Thursday's meeting, twelve residents walked to the microphone to speak about the proposed bus route cuts — including several who spoke through an interpreter.
+      </span>
+    </div>
+
+    <div class="sentence-row" id="row-7">
+      <span class="sent-num">7</span>
+      <span class="sent-text">
+        The council could not vote on the zoning variance because three members were absent — without a <span class="blank empty-blank" data-answer="quorum" onclick="fillBlank(this)">click to fill</span> of at least six members present, no official decisions can be made.
+      </span>
+    </div>
+
+    <div class="sentence-row" id="row-8">
+      <span class="sent-num">8</span>
+      <span class="sent-text">
+        The mayor proposed a <span class="blank empty-blank" data-answer="budget appropriation" onclick="fillBlank(this)">click to fill</span> of $210,000 for the SomerViva Office of Immigrant Affairs, which would pay for real-time interpreters at city meetings in eight languages.
+      </span>
+    </div>
+
+    <div class="sentence-row" id="row-9">
+      <span class="sent-num">9</span>
+      <span class="sent-text">
+        Somerville is divided into seven <span class="blank empty-blank" data-answer="ward" onclick="fillBlank(this)">click to fill</span>s, and each one elects its own representative to the city council — you can find yours by entering your address on the city's website.
+      </span>
+    </div>
+
+    <div class="sentence-row" id="row-10">
+      <span class="sent-num">10</span>
+      <span class="sent-text">
+        More than 400 East Somerville residents signed a <span class="blank empty-blank" data-answer="petition" onclick="fillBlank(this)">click to fill</span> asking the MBTA not to reduce service on the Route 87 bus, and delivered it to the city councilor's office on Monday morning.
+      </span>
+    </div>
+
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-primary" id="check-btn" onclick="checkAnswers()">Check answers</button>
+    <button class="btn btn-secondary" id="reset-btn" onclick="resetAll()">Start over</button>
+  </div>
+
+  <div class="score-bar" id="score-bar"></div>
+
+</div>
+
+<script>
+let selectedWord = null;
+let selectedChip = null;
+
+function selectWord(chip) {
+  // Deselect previous
+  if (selectedChip) selectedChip.classList.remove('selected');
+  // If clicking the same chip, deselect
+  if (selectedChip === chip) { selectedWord = null; selectedChip = null; return; }
+  selectedWord = chip.dataset.word;
+  selectedChip = chip;
+  chip.classList.add('selected');
+}
+
+function fillBlank(blank) {
+  if (!selectedWord) return;
+  // If blank already has a word, return it to bank
+  const prev = blank.dataset.filled;
+  if (prev) {
+    const chips = document.querySelectorAll('.word-chip');
+    chips.forEach(c => { if (c.dataset.word === prev) { c.classList.remove('used'); } });
+  }
+  // Fill the blank
+  blank.textContent = selectedWord;
+  blank.dataset.filled = selectedWord;
+  blank.classList.remove('empty-blank');
+  blank.classList.add('filled');
+  // Mark chip as used
+  selectedChip.classList.remove('selected');
+  selectedChip.classList.add('used');
+  selectedWord = null;
+  selectedChip = null;
+}
+
+function checkAnswers() {
+  const blanks = document.querySelectorAll('.blank');
+  let correct = 0;
+  let total = blanks.length;
+
+  blanks.forEach(blank => {
+    const answer = blank.dataset.answer;
+    const filled = blank.dataset.filled || '';
+    const row = blank.closest('.sentence-row');
+    row.classList.remove('correct-row', 'wrong-row');
+    blank.classList.remove('correct', 'wrong');
+
+    // Remove old result icons
+    const oldIcon = blank.parentNode.querySelector('.result-icon');
+    if (oldIcon) oldIcon.remove();
+
+    if (filled === answer) {
+      correct++;
+      blank.classList.add('correct');
+      row.classList.add('correct-row');
+      const icon = document.createElement('span');
+      icon.className = 'result-icon';
+      icon.textContent = ' ✓';
+      blank.after(icon);
+    } else if (filled) {
+      blank.classList.add('wrong');
+      row.classList.add('wrong-row');
+      const icon = document.createElement('span');
+      icon.className = 'result-icon';
+      icon.textContent = ' ✗';
+      blank.after(icon);
+    }
+  });
+
+  // Update chips for wrong ones - allow re-try
+  const chips = document.querySelectorAll('.word-chip');
+  chips.forEach(chip => {
+    chip.classList.remove('correct-chip', 'wrong-chip');
+    const word = chip.dataset.word;
+    // Find the blank with this answer
+    let found = false;
+    blanks.forEach(b => {
+      if (b.dataset.answer === word && b.dataset.filled === word) {
+        found = true;
+        chip.classList.add('correct-chip');
+      }
+    });
+  });
+
+  // Show score
+  const bar = document.getElementById('score-bar');
+  bar.style.display = 'block';
+  const pct = Math.round((correct / total) * 100);
+  if (correct === total) {
+    bar.className = 'score-bar perfect';
+    bar.textContent = `🎉 Perfect — ${correct} out of ${total}! You know all ten words.`;
+  } else if (correct >= 7) {
+    bar.className = 'score-bar good';
+    bar.textContent = `✓ Good work — ${correct} out of ${total} correct. Review the highlighted sentences and try again.`;
+  } else {
+    bar.className = 'score-bar keep-going';
+    bar.textContent = `${correct} out of ${total} correct. Look back at your glossary and try the ones in red.`;
+  }
+}
+
+function resetAll() {
+  const blanks = document.querySelectorAll('.blank');
+  blanks.forEach(blank => {
+    blank.textContent = 'click to fill';
+    blank.dataset.filled = '';
+    blank.classList.remove('correct', 'wrong', 'filled');
+    blank.classList.add('empty-blank');
+    const icon = blank.parentNode.querySelector('.result-icon');
+    if (icon) icon.remove();
+    blank.closest('.sentence-row').classList.remove('correct-row', 'wrong-row');
+  });
+  const chips = document.querySelectorAll('.word-chip');
+  chips.forEach(chip => {
+    chip.classList.remove('used', 'selected', 'correct-chip', 'wrong-chip');
+  });
+  selectedWord = null;
+  selectedChip = null;
+  const bar = document.getElementById('score-bar');
+  bar.style.display = 'none';
+}
+</script>
+
+</body>
+</html>
