@@ -1,0 +1,328 @@
+
+<style>
+  * { box-sizing: border-box; }
+  .wrap { padding: 0.5rem 0 1.5rem; }
+  .agenda-doc { border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); overflow: hidden; margin-bottom: 20px; }
+  .agenda-banner { background: #1a3a6b; color: white; padding: 14px 18px; }
+  .agenda-banner .city-name { font-size: 16px; font-weight: 500; letter-spacing: 0.02em; }
+  .agenda-banner .meeting-info { font-size: 12px; opacity: 0.85; margin-top: 4px; line-height: 1.6; }
+  .agenda-notice { background: #E6F1FB; border-bottom: 0.5px solid var(--color-border-tertiary); padding: 9px 18px; font-size: 12px; color: #185FA5; line-height: 1.5; }
+  .agenda-item { border-bottom: 0.5px solid var(--color-border-tertiary); cursor: pointer; transition: background 0.15s; }
+  .agenda-item:last-child { border-bottom: none; }
+  .agenda-item:hover { background: var(--color-background-secondary); }
+  .agenda-item.open { background: var(--color-background-secondary); }
+  .agenda-header-row { display: grid; grid-template-columns: 32px 1fr auto; gap: 10px; align-items: start; padding: 12px 18px; }
+  .item-num { font-size: 12px; font-weight: 500; color: var(--color-text-tertiary); padding-top: 2px; }
+  .item-main .item-title { font-size: 14px; font-weight: 500; color: var(--color-text-primary); line-height: 1.4; }
+  .item-main .item-desc { font-size: 12px; color: var(--color-text-secondary); margin-top: 4px; line-height: 1.5; }
+  .item-tags { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+  .tag { font-size: 10px; font-weight: 500; padding: 2px 8px; border-radius: 20px; white-space: nowrap; }
+  .tag-vote { background: #E6F1FB; color: #185FA5; }
+  .tag-public { background: #FAEEDA; color: #854F0B; }
+  .tag-info { background: var(--color-background-secondary); color: var(--color-text-tertiary); border: 0.5px solid var(--color-border-tertiary); }
+  .tag-urgent { background: #FDECEA; color: #9B2020; }
+
+  /* EXPANDED QUESTIONS PANEL */
+  .questions-panel { border-top: 0.5px solid var(--color-border-tertiary); padding: 16px 18px; display: none; }
+  .agenda-item.open .questions-panel { display: block; }
+  .q-section { margin-bottom: 14px; }
+  .q-section:last-child { margin-bottom: 0; }
+  .q-label { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+  .q-label.comprehension { color: #185FA5; }
+  .q-label.critical { color: #854F0B; }
+  .q-label.personal { color: #3B6D11; }
+  .q-label.comment { color: #6B2FA0; }
+  .q-list { list-style: none; padding: 0; margin: 0; }
+  .q-list li { font-size: 13px; color: var(--color-text-primary); padding: 5px 0 5px 14px; border-bottom: 0.5px solid var(--color-border-tertiary); line-height: 1.6; position: relative; }
+  .q-list li::before { content: '→'; position: absolute; left: 0; color: var(--color-text-tertiary); font-size: 11px; top: 7px; }
+  .q-list li:last-child { border-bottom: none; }
+  .want-box { background: #EEEDFE; border-radius: var(--border-radius-md); padding: 11px 14px; }
+  .want-box .want-prompt { font-size: 13px; font-weight: 500; color: #534AB7; margin-bottom: 6px; }
+  .want-box .want-lines div { border-bottom: 1px solid #C0BAF5; height: 24px; margin-bottom: 4px; }
+  .expand-icon { font-size: 14px; color: var(--color-text-tertiary); margin-left: 8px; transition: transform 0.2s; }
+  .agenda-item.open .expand-icon { transform: rotate(180deg); }
+
+  /* FINAL SECTION */
+  .final-section { border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); overflow: hidden; }
+  .final-header { background: #1a3a6b; color: white; padding: 12px 18px; font-size: 14px; font-weight: 500; }
+  .final-body { padding: 16px 18px; }
+  .final-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+  .final-card { border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); padding: 12px 14px; }
+  .final-card .fc-title { font-size: 13px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 6px; }
+  .final-card .fc-q { font-size: 13px; color: var(--color-text-secondary); line-height: 1.6; }
+  .comment-box { background: #EAF3DE; border-radius: var(--border-radius-md); padding: 14px 16px; }
+  .comment-box .cb-prompt { font-size: 14px; font-weight: 500; color: #3B6D11; margin-bottom: 4px; }
+  .comment-box .cb-sub { font-size: 12px; color: #3B6D11; margin-bottom: 12px; opacity: 0.85; }
+  .comment-box .cb-line { border-bottom: 1px solid #B2D98A; height: 26px; margin-bottom: 4px; }
+  .info-strip { font-size: 12px; color: var(--color-text-tertiary); padding: 10px 18px; border-top: 0.5px solid var(--color-border-tertiary); background: var(--color-background-secondary); line-height: 1.6; }
+</style>
+
+<div class="wrap">
+
+<!-- AGENDA DOCUMENT -->
+<div class="agenda-doc">
+  <div class="agenda-banner">
+    <div class="city-name">City of Somerville — City Council Regular Meeting</div>
+    <div class="meeting-info">
+      Thursday, June 26, 2026 · 6:00 PM · City Hall, 93 Highland Ave, Room 201<br>
+      Open to all residents and community members · Watch live: somervillema.gov/video<br>
+      Need interpretation? Contact SomerViva at least 7 days in advance: 617-666-3311
+    </div>
+  </div>
+  <div class="agenda-notice">
+    📢 Public comment sign-in at the clerk's table by 5:45 PM · 2 minutes per speaker · You do not need to be a citizen to speak
+  </div>
+
+  <!-- ITEM 1 -->
+  <div class="agenda-item" onclick="toggleItem(this)">
+    <div class="agenda-header-row">
+      <span class="item-num">1.</span>
+      <div class="item-main">
+        <div class="item-title">Call to order / Roll call / Approval of June 12 minutes</div>
+        <div class="item-desc">Procedural opening. Council must have quorum (6 of 11 members present) to conduct business.</div>
+      </div>
+      <div class="item-tags"><span class="tag tag-info">Procedural</span><span class="expand-icon">▼</span></div>
+    </div>
+    <div class="questions-panel">
+      <div class="q-section">
+        <div class="q-label comprehension">📘 Comprehension</div>
+        <ul class="q-list">
+          <li>What is a quorum? Why does it matter that 6 of 11 members must be present?</li>
+          <li>What does "approval of minutes" mean — why does the council vote on this?</li>
+        </ul>
+      </div>
+      <div class="q-section">
+        <div class="q-label critical">🔍 Critical thinking</div>
+        <ul class="q-list">
+          <li>If only 5 councilors show up, the meeting cannot legally proceed. Is this a good rule or a bad rule? What problems could it cause? What problems does it prevent?</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ITEM 2 -->
+  <div class="agenda-item" onclick="toggleItem(this)">
+    <div class="agenda-header-row">
+      <span class="item-num">2.</span>
+      <div class="item-main">
+        <div class="item-title">Zoning variance — 78–84 Broadway, East Somerville (Nexus Development LLC)</div>
+        <div class="item-desc">Developer requests a variance to demolish three existing two-family homes and construct a 5-story, 38-unit market-rate apartment building. Current tenants (11 households, mostly long-term residents) would be displaced. Abutters notified. Planning Board voted 3–2 in favor. First reading.</div>
+      </div>
+      <div class="item-tags"><span class="tag tag-vote">Vote — 1st reading</span><span class="expand-icon">▼</span></div>
+    </div>
+    <div class="questions-panel">
+      <div class="q-section">
+        <div class="q-label comprehension">📘 Comprehension</div>
+        <ul class="q-list">
+          <li>What is a zoning variance? Why does the developer need the council's permission?</li>
+          <li>What does "first reading" mean — does the council vote to pass this tonight?</li>
+          <li>The Planning Board voted 3–2 in favor. What does that tell you?</li>
+        </ul>
+      </div>
+      <div class="q-section">
+        <div class="q-label critical">🔍 Critical thinking</div>
+        <ul class="q-list">
+          <li>Somerville lost 18% of its children between 2012 and 2022 partly due to displacement. How does this development connect to that trend?</li>
+          <li>The developer argues that more housing supply will lower rents citywide. A tenant advocate argues that displacing 11 households to build market-rate units makes the problem worse. Who do you think has the stronger argument — and why?</li>
+          <li>What protections, if any, should the 11 displaced households receive? Who should pay for them?</li>
+        </ul>
+      </div>
+      <div class="q-section">
+        <div class="q-label personal">💬 What do YOU think?</div>
+        <div class="want-box">
+          <div class="want-prompt">If you were speaking at public comment tonight, what would you ask the council to do?</div>
+          <div class="want-lines"><div></div><div></div><div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ITEM 3 -->
+  <div class="agenda-item" onclick="toggleItem(this)">
+    <div class="agenda-header-row">
+      <span class="item-num">3.</span>
+      <div class="item-main">
+        <div class="item-title">Ordinance 2026-22: Just-cause eviction protections — second reading and vote</div>
+        <div class="item-desc">Proposed ordinance would require landlords to provide a legally recognized reason before evicting a tenant (e.g., non-payment of rent, lease violation, or owner move-in). Landlords could not evict tenants simply to raise rents or sell the property. Applies to buildings with 3+ units. Requires state approval (home rule petition). Second and final reading tonight.</div>
+      </div>
+      <div class="item-tags"><span class="tag tag-vote">Vote — final</span><span class="tag tag-urgent">High interest</span><span class="expand-icon">▼</span></div>
+    </div>
+    <div class="questions-panel">
+      <div class="q-section">
+        <div class="q-label comprehension">📘 Comprehension</div>
+        <ul class="q-list">
+          <li>What does "just cause" mean? Give one example of a just cause and one example of something that would NOT be a just cause under this ordinance.</li>
+          <li>Why does Somerville need to ask the state legislature for permission to pass this ordinance? Who has more power — the city or the state?</li>
+          <li>Why does this ordinance only apply to buildings with 3 or more units?</li>
+        </ul>
+      </div>
+      <div class="q-section">
+        <div class="q-label critical">🔍 Critical thinking</div>
+        <ul class="q-list">
+          <li>A landlord argues: "This law takes away my right to decide what happens with my own property." A tenant argues: "Without this protection, I can lose my home at any time for no reason." Which right do you think should take priority — and does your answer change depending on who owns the building?</li>
+          <li>Some landlords say this law will make them less willing to rent to immigrants or low-income tenants because they fear they won't be able to remove them if problems arise. Do you think this concern is valid? How would you respond to it?</li>
+          <li>Construct the strongest argument AGAINST this ordinance, even if you support it. What would a thoughtful opponent say?</li>
+        </ul>
+      </div>
+      <div class="q-section">
+        <div class="q-label personal">💬 What do YOU think?</div>
+        <div class="want-box">
+          <div class="want-prompt">Have you or someone you know ever been asked to leave an apartment for reasons that felt unfair? How does that experience shape how you think about this ordinance?</div>
+          <div class="want-lines"><div></div><div></div><div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ITEM 4 -->
+  <div class="agenda-item" onclick="toggleItem(this)">
+    <div class="agenda-header-row">
+      <span class="item-num">4.</span>
+      <div class="item-main">
+        <div class="item-title">Budget appropriation — SomerViva Office of Immigrant Affairs: language access expansion</div>
+        <div class="item-desc">Proposed allocation of $210,000 to expand real-time interpretation at city council meetings, ZBA hearings, and school committee meetings; reduce advance notice requirement from 7 days to 48 hours; and add Somali, Amharic, and Tigrinya to the city's currently supported languages (Spanish, Portuguese, Haitian Creole, Nepali, Chinese, Turkish, Arabic). Funded through city general budget.</div>
+      </div>
+      <div class="item-tags"><span class="tag tag-vote">Vote required</span><span class="expand-icon">▼</span></div>
+    </div>
+    <div class="questions-panel">
+      <div class="q-section">
+        <div class="q-label comprehension">📘 Comprehension</div>
+        <ul class="q-list">
+          <li>Currently, Somerville residents must request an interpreter 7 days in advance. Why might this be a barrier? Who is most affected by it?</li>
+          <li>What is SomerViva? What does the Office of Immigrant Affairs do?</li>
+          <li>Where does the $210,000 come from — and who decides how the city budget is spent?</li>
+        </ul>
+      </div>
+      <div class="q-section">
+        <div class="q-label critical">🔍 Critical thinking</div>
+        <ul class="q-list">
+          <li>A council member might argue: "We can't afford this — there are higher priorities for $210,000." What would you say in response? Is language access a luxury or a right?</li>
+          <li>The right to speak at a public meeting exists on paper for all residents. But if the meeting is only in English, is that right real? What is the difference between a formal right and an actual right?</li>
+          <li>Somali, Amharic, and Tigrinya are being added to the list. What does this tell you about how Somerville's immigrant community is changing?</li>
+        </ul>
+      </div>
+      <div class="q-section">
+        <div class="q-label personal">💬 What do YOU think?</div>
+        <div class="want-box">
+          <div class="want-prompt">Has language ever been a barrier to getting something you needed from a government office, school, or institution? What happened — and what would have helped?</div>
+          <div class="want-lines"><div></div><div></div><div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ITEM 5 -->
+  <div class="agenda-item" onclick="toggleItem(this)">
+    <div class="agenda-header-row">
+      <span class="item-num">5.</span>
+      <div class="item-main">
+        <div class="item-title">Informational update: MBTA proposal — reduce 87 bus frequency, East Somerville</div>
+        <div class="item-desc">The MBTA proposes reducing frequency on the Route 87 bus (Lechmere–Arlington Center) from every 15 minutes to every 25 minutes on weekdays due to budget constraints. The 87 is a primary transit route for East Somerville residents, many of whom do not own cars. No council vote tonight; informational only. Public comment will be forwarded to the MBTA board.</div>
+      </div>
+      <div class="item-tags"><span class="tag tag-info">Informational</span><span class="tag tag-public">Comment forwarded to MBTA</span><span class="expand-icon">▼</span></div>
+    </div>
+    <div class="questions-panel">
+      <div class="q-section">
+        <div class="q-label comprehension">📘 Comprehension</div>
+        <ul class="q-list">
+          <li>The council cannot vote on this item tonight. Why not? Who controls the MBTA?</li>
+          <li>What does it mean that public comment will be "forwarded to the MBTA board"? Does this give residents any real power?</li>
+          <li>If you take the 87 bus and it comes every 25 minutes instead of 15, what changes in your daily life?</li>
+        </ul>
+      </div>
+      <div class="q-section">
+        <div class="q-label critical">🔍 Critical thinking</div>
+        <ul class="q-list">
+          <li>Bus cuts often affect low-income neighborhoods and communities of color most severely. Is this an accident, or does it reflect a pattern? What evidence would you look for to answer that question?</li>
+          <li>The MBTA says the cuts are necessary because of budget constraints. Who funds the MBTA — and what does that tell you about who has power over this decision?</li>
+          <li>The council can't vote on this, but they can still act. What are three things Somerville's city council or mayor could do to oppose this cut — even without a formal vote?</li>
+        </ul>
+      </div>
+      <div class="q-section">
+        <div class="q-label personal">💬 What do YOU think?</div>
+        <div class="want-box">
+          <div class="want-prompt">How do you get around Somerville — bus, car, walking, bike? How would cuts to bus service affect you or your family? What do you want the MBTA to hear from this community?</div>
+          <div class="want-lines"><div></div><div></div><div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ITEM 6 -->
+  <div class="agenda-item" onclick="toggleItem(this)">
+    <div class="agenda-header-row">
+      <span class="item-num">6.</span>
+      <div class="item-main">
+        <div class="item-title">Public comment — open to all</div>
+        <div class="item-desc">Any resident or community member may address the council on any topic. Sign in at the clerk's table by 5:45 PM. Two minutes per speaker. The council listens but does not respond during public comment.</div>
+      </div>
+      <div class="item-tags"><span class="tag tag-public">Open to all</span><span class="expand-icon">▼</span></div>
+    </div>
+    <div class="questions-panel">
+      <div class="q-section">
+        <div class="q-label comprehension">📘 Comprehension</div>
+        <ul class="q-list">
+          <li>The council "listens but does not respond." Why do you think this is the rule? Does it make public comment more or less useful?</li>
+          <li>You can speak about any topic — not just items on tonight's agenda. What are some issues in Somerville you might raise that are NOT on this agenda?</li>
+        </ul>
+      </div>
+      <div class="q-section">
+        <div class="q-label critical">🔍 Critical thinking</div>
+        <ul class="q-list">
+          <li>Public comment is often dominated by the same people — those with more time, more English fluency, more comfort speaking in public. How does this shape which voices the council hears most often? Is this a problem — and whose responsibility is it to fix?</li>
+          <li>Fatima from our dictation watched but didn't speak. Is watching — being present — a form of civic participation? What does presence communicate that words don't?</li>
+        </ul>
+      </div>
+      <div class="q-section">
+        <div class="q-label comment">🎤 Write your public comment</div>
+        <div class="want-box" style="background:#EAF3DE; border:none;">
+          <div class="want-prompt" style="color:#3B6D11;">Choose one agenda item. Write exactly what you would say at the microphone tonight. You have 2 minutes — about 250 words spoken aloud.</div>
+          <div class="cb-sub" style="color:#3B6D11; font-size:12px; margin-bottom:10px;">Start with: your name + neighborhood. State the issue. Say what you want the council to do. Give one specific reason why. End with a clear ask.</div>
+          <div class="want-lines" style="border-color:#B2D98A;"><div></div><div></div><div></div><div></div><div></div><div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="info-strip">
+    📋 Submit written comments anytime: <strong>publiccomments@somervillema.gov</strong> &nbsp;·&nbsp; Must arrive by Friday to appear on next meeting's agenda &nbsp;·&nbsp; Watch past meetings: somervillema.gov/video &nbsp;·&nbsp; Find your ward councilor: somervillema.gov/government
+  </div>
+</div>
+
+<!-- FINAL SYNTHESIS SECTION -->
+<div class="final-section">
+  <div class="final-header">📝 After the agenda: synthesis questions</div>
+  <div class="final-body">
+    <div class="final-grid">
+      <div class="final-card">
+        <div class="fc-title">Across all items</div>
+        <div class="fc-q">Three of tonight's five items directly affect renters and immigrant families. Is this a coincidence — or does it tell you something about who lives in Somerville and what they need from their government?</div>
+      </div>
+      <div class="final-card">
+        <div class="fc-title">Power and limits</div>
+        <div class="fc-q">Tonight the council can vote on zoning and tenant protections, but cannot change the MBTA budget. What does this tell you about the limits of local government? Who has the power that local government doesn't?</div>
+      </div>
+      <div class="final-card">
+        <div class="fc-title">Who is missing?</div>
+        <div class="fc-q">Look at the five agenda items. Whose voices and concerns are most represented? Whose are missing? What would you add to this agenda if you could add one item?</div>
+      </div>
+      <div class="final-card">
+        <div class="fc-title">Your agenda item</div>
+        <div class="fc-q">If you could bring one problem from your life in Somerville to the city council — housing, schools, safety, transportation, language access, anything — what would it be? Write it as an agenda item title and a two-sentence description.</div>
+      </div>
+    </div>
+    <div class="comment-box">
+      <div class="cb-prompt">🎤 Final reflection: What do YOU want from Somerville's government?</div>
+      <div class="cb-sub">Not what the council wants. Not what the law says. What do you — as someone who lives here, works here, raises a family here — need your city to do?</div>
+      <div class="cb-line"></div><div class="cb-line"></div><div class="cb-line"></div><div class="cb-line"></div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+function toggleItem(el) {
+  el.classList.toggle('open');
+}
+</script>
