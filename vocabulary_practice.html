@@ -90,6 +90,159 @@
   /* HINT */
   .hint-text { font-size: 12px; color: var(--color-text-tertiary); margin-top: 4px; display: none; font-style: italic; padding-left: 38px; }
   .sentence-row.wrong-row + .hint-text { display: block; }
+
+ /* ===== MOBILE IMPROVEMENTS ===== */
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+.wrap {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 12px;
+}
+
+.activity-title {
+  font-size: clamp(24px, 6vw, 34px);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.activity-sub {
+  font-size: clamp(15px, 4vw, 18px);
+  line-height: 1.6;
+}
+
+.bank-label {
+  font-size: 13px;
+}
+
+.word-bank {
+  gap: 10px;
+  padding: 16px;
+}
+
+.word-chip {
+  font-size: 16px;
+  padding: 12px 18px;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sentences {
+  border-radius: 16px;
+}
+
+.sentence-row {
+  padding: 18px 16px;
+  font-size: 17px;
+  line-height: 1.8;
+}
+
+.sent-num {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.blank {
+  min-width: 140px;
+  font-size: 16px;
+  padding: 2px 8px;
+}
+
+.btn-row {
+  flex-wrap: wrap;
+}
+
+.btn {
+  min-height: 50px;
+  font-size: 16px;
+  padding: 12px 20px;
+}
+
+.score-bar {
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+/* ===== PHONE LAYOUT ===== */
+
+@media (max-width: 768px) {
+
+  .wrap {
+    padding: 10px;
+  }
+
+  .word-bank {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .word-chip {
+    width: 100%;
+    text-align: center;
+    font-size: 15px;
+    padding: 14px 10px;
+  }
+
+  .sentence-row {
+    grid-template-columns: 24px 1fr;
+    gap: 12px;
+    padding: 18px 14px;
+    font-size: 16px;
+  }
+
+  .blank {
+    display: inline-block;
+    min-width: 110px;
+    font-size: 15px;
+  }
+
+  .btn-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .btn {
+    width: 100%;
+  }
+}
+
+/* ===== SMALL PHONES ===== */
+
+@media (max-width: 480px) {
+
+  .activity-title {
+    font-size: 28px;
+  }
+
+  .activity-sub {
+    font-size: 15px;
+  }
+
+  .word-bank {
+    grid-template-columns: 1fr;
+  }
+
+  .word-chip {
+    font-size: 16px;
+  }
+
+  .sentence-row {
+    font-size: 17px;
+    line-height: 1.9;
+  }
+
+  .blank {
+    min-width: 100px;
+    font-size: 15px;
+  }
+}
 </style>
 
 <div class="wrap">
